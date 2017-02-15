@@ -1,0 +1,10 @@
+
+# Compiled latex files
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.lof
+*.toc
+*.log
+*.lot
