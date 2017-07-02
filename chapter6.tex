@@ -1,3 +1,73 @@
 \chapter{Conclusion}
 
-    \section{Conclusion}
+  \section{Overview}
+  In this thesis I have provided the design for two protocols that make use
+  of AODV's route discovery mechanism to perform attendance tracking. The first
+  protocol \textit{Roll Call}, is designed for lecture theatre-like scenarios in
+  which the attendance of a pre-determined list of users is being taken. The
+  second protocol \textit{Route to zero}, is designed for scenarios in which
+  the attendance of a group of possibly unknown users is being taken.
+
+  An AODV module with route discovery functionality was implemented for use in
+  Bluetooth Low Energy. In addition to this, the Roll Call and Route-to-Zero protocols were implemented
+  using the AODV module and tested in a small to medium scale network of nRF51
+  devices. The results of the evaluation show the protocol working with three
+  hops in the network, but further fine tuning of the BLE setting is required
+  to improve the performance of the protocol.
+
+  \section{Discussion}
+  The two designs were capable of performing node discovery, but it is difficult
+  to say how successful they were without any other references. Based on the recorded
+  data, it would take the RTZ protocol 90 seconds to take the attendance in a lecture
+  theatre of 120 students. This would be further increased in networks with mobility
+  and in areas with high interference - an aspect of networks untested in this thesis.
+
+  The AODV discovery mechanism was suitable for the task but in both designs, the amount
+  of RREQ packets flooded through the system was quite high.
+  It is possible that the metrics measured could be further improved by reducing
+  the advertisement period and increasing the scanning interval, allowing for
+  packets to be flooded through the network at a faster pace. It would also be necessary
+  to experiment in larger networks - either with physical devices, or through
+  simulation.
+
+  Overall, AODV seems to have been a good choice. It outperformed the other
+  investigated protocols in mobile networks, which could be desirable in attendance
+  tracking applications, but was not tested in this thesis. For an approach
+  focused on purely static networks, RPL or OLSR, would likely be better choices,
+  but have a higher implementation complexity and their performance in BLE is
+  difficult to predict.
+
+  \section{Future Work}
+  \subsection{Improvements to AODV}
+  There are a number of improvements that could be made to the AODV module, namely
+  the implementation of route maintenance. This would allow for attendance tracking
+  in scenarios of high mobility and would be necessary in larger networks were there
+  is a much higher chance of route failure.
+
+  \subsection{Simulation}
+  The testing of the designs outlined in this thesis was only performed in a small
+  ten node network. It is difficult to test in larger physical networks as the devices
+  have to be acquired, programmed, and space has to be located. With a minimum range
+  of 4.32m, a very large space would be required to test networks with hop counts
+  in the double digits and higher. One solution to this which is commonly used, is
+  a simulation environment that replicates these larger networks which provides the
+  advantage of not requiring physical devices or space.
+
+  One issue with this is that there are few BLE simulation tools. There is a
+  BLE simulator \cite{ble_simulator} implemented in the OMNeT++ simulator \cite{omnet}
+  but there are no instructions, no updates, and it has quite poor code quality as
+  it was initially intended to quickly check some of the author's ideas. As a
+  result of this, in the early stages of this thesis, I decided to implement
+  a higher level BLE simulator, which accurately simulated BLE channels in the
+  physical layer, and advertising and scanning. The implementation was written
+  in Java and drew from the OMNeT++ simulator. Unfortunately, there wasn't sufficient
+  time to implement this as well as implementing the designs on physical hardware
+  and so simulation development was halted to prioritise the physical implementation.
+
+  \subsection{Implementation of other protocols}
+  It would be interesting to implement some of the other protocols discussed in
+  chapter \ref{background}, especially RPL. RPL outperformed AODV in
+  section \ref{performance} so it would be interesting to see its performance
+  when used for attendance tracking. The adaptation of RPL for
+  BLE would be difficult as it has a very high implementation complexity but perhaps
+  performance gains would outweigh this complexity.

@@ -6,13 +6,13 @@
 %%% =============================================
 %%% Copyright (c) 1995 by Dinesh Das.  All rights reserved.
 %%%
-%%% Modified by Bert Kay in November 1996.  
+%%% Modified by Bert Kay in November 1996.
 %%% My comments contain the string  ``BKay''.
 %%%
 %%% Modified by James A. Bednar in March 1999.
 %%% My comments contain the string  ``JAB''.
 %%%
-%%% Extended by James A. Bednar in February 2002, based on 
+%%% Extended by James A. Bednar in February 2002, based on
 %%% portions of utdiss2-02.sty released on 29 November 2001
 %%% by Craig McCluskey (mccluskey@mail.utexas.edu).
 %%% His comments contain the string ``cwm''.
@@ -26,7 +26,7 @@
 %%% Modified by Ross Brennan in March 2005, to be suitable for use
 %%% in TCD. Based on modificatoiins made to a the udthesis.sty template
 %%% file by Jesus Bisbal in May 2002
-%%% 
+%%%
 %%% This file is free and can be modified or distributed as long as
 %%% you meet the following conditions:
 %%%
@@ -354,7 +354,7 @@
 %\def\sigskip{\vskip0.15in plus 0.2in minus 0.1in}
 
 \newcommand{\thesisdeclarationpage}{{
-	
+
 	\thispagestyle{empty}
 	\begin{spacing}{2}
 	\begin{center}
@@ -525,7 +525,6 @@
     \setlength\baselineskip\@tmplength
     \clearpage}
 
-
 %%%
 %%% Environment to generate abstract page.
 %%%
@@ -690,7 +689,7 @@
 %%% I uncommented this because the version of this environment in
 %%% /lusr/tex/texmf/tex/latex2e/report.cls doesn't have the /addtocontentsline
 %%% call.  This ends up failing to add a Bibliography entry to the Table
-%%% of contents.  I duplicated the report.cls version  and added the 
+%%% of contents.  I duplicated the report.cls version  and added the
 %%% /addtocontentsline myself since the commented-out version in this
 %%% file didn't seem to work  BKay 17Oct96.
 \renewenvironment{thebibliography}[1]
@@ -715,7 +714,7 @@
 %%% Command from report.cls, (c) LaTeX3 Project.
 %%%
 \renewcommand\listoftables{%
-    \clearpage  %%% AME 
+    \clearpage  %%% AME
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -728,7 +727,7 @@
     \if@restonecol\twocolumn\fi
     }
 \renewcommand\listoffigures{%
-    \clearpage  %%% AME 
+    \clearpage  %%% AME
     \if@twocolumn
       \@restonecoltrue\onecolumn
     \else
@@ -825,8 +824,8 @@ Wednesday\or Thursday\or Friday\or Saturday\fi}
 %%%
 %%% Spacing commands
 %%%
-%%% Most from setspace.sty by Geoffrey Tobin 
-%%% 
+%%% Most from setspace.sty by Geoffrey Tobin
+%%%
 %%%
 
 \newcommand{\setstretch}[1]{%   %%% AME setup to use setspace macros
@@ -900,9 +899,9 @@ Wednesday\or Thursday\or Friday\or Saturday\fi}
 }
 
 
-%%% 
+%%%
 %%% Footnotes, AME, did not bring over minipage footnotes
-%%% 
+%%%
 
 \long\def\@footnotetext#1{%
   \insert\footins{%
@@ -936,7 +935,7 @@ Wednesday\or Thursday\or Friday\or Saturday\fi}
 
 %%%
 %%% AME Modified to use the setspace style commands
-%%% 
+%%%
 
 \newcommand{\restore@spacing}{%
     \par
@@ -949,9 +948,8 @@ Wednesday\or Thursday\or Friday\or Saturday\fi}
 
 \newenvironment{spacing}[1]{%
   \par
-  \begingroup             
+  \begingroup
   \setstretch {#1}%
-}{ 
+}{
   \restore@spacing
 }
-

@@ -1,192 +1,503 @@
-\chapter{Background}
+\chapter{Background} \label{background}
 
     \section{Introduction}
+    This chapter investigates some of the techniques currently used in radio duty cycling,
+    a key component in low energy applications. Specifically, an overview of the X-MAC, Box-MAC-2,
+    and ContikiMAC radio duty cycling protocols is provided along with the benefits
+    associated with the techniques used.
 
-    \section{Bluetooth Low Energy}
-      \subsection{Scanning and Advertising}
-      The Packet data unit for the advertising channel (called the Advertising
-      Channel PDU) includes a 2-byte header and a variable payload from 6 to 37
-      bytes. The actual length of the payload is defined by the 6-bit Length field
-      in the header of the Advertising Channel PDU.
+    An overview of well known ad-hoc routing protocols is also provided with a focus
+    on route discovery as a mechanism for attendance tracking, and packet size,
+    as BLE advertisement packets are limited in size. A brief overview on research
+    related to the performance of these protocols is then provided.
 
-      there are several PDU types for the advertisements, but here we will focus
-      ADV\_NONCONN\_IND - peripheral does not want to accept connections, which is
-      typical in Beacons.
+    \section{Radio duty cycling}
+    Power consumption is extremely important for nodes that wish to achieve a long
+    network lifetime. It is not possible to achieve this long life time if a radio transceiver
+    is permanently powered on as even low-power transceivers consume too much power.
+    By turning the radio transceiver off a node can conserve energy and achieve a
+    long network lifetime, however when the transceiver is off, the node cannot
+    send or receive messages. This is solved by keeping the radio off only in-between
+    the reception and transmission of messages.
 
-      \FloatBarrier
-      \begin{figure}[h]
-        \includegraphics[width=\textwidth]{Images/ble_advertisement_packet.PNG}
-      \end{figure}
-      \FloatBarrier
+      \subsection{Low Power Listening}
+    Low Power Listening (LPL) \cite{LPL} is a duty cycling technique in which receivers periodically
+    turn on their radios to identify if there is activity in the radio medium. If
+    activity is detected, the receiving node's radio is kept on for a longer period
+    so that data can be exchanged. an illustration of LPL is provided in figure \ref{fig:lpl}.
 
-      \FloatBarrier
-      \begin{figure}[h]
-        \includegraphics[width=\textwidth]{Images/general_structure.png}
-      \end{figure}
-      \FloatBarrier
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[width=\textwidth]{Images/chapter2/lpl.png}
+      \caption{Low Power Listening}
+      \label{fig:lpl}
+    \end{figure}
+    \FloatBarrier
 
-      \FloatBarrier
-      \begin{figure}[h]
-        \includegraphics[width=\textwidth]{Images/packet_example.png}
-      \end{figure}
-      \FloatBarrier
-      http://www.argenox.com/a-ble-advertising-primer/
+    Transmitting nodes send a preamble stream which is at least as long as the
+    receiving node's wake-up interval, ensuring that the receiver will have their
+    radio on during the transmission of the preamble. When a receiving node detects
+    a preamble stream, they respond with an acknowledgement, and the transmitting
+    node terminates the preamble transmission.
 
-      https://docs.mbed.com/docs/ble-intros/en/latest/Advanced/CustomGAP/
+    LPL was designed for single node wake-up. Broadcast mode is possible, however,
+    this requires the transmission of maximum length preamble streams as the transmitting
+    node does not know when all intended receivers have woken up, and single node
+    wake-up is rendered impossible as any node detecting the preamble will keep
+    their radio on afterwards.
 
-    \section{Investigated Protocols}
-      \subsection{AODV}
-      \subsubsection{Overview}
-      AODV is a reactive routing protocol designed for use in ad hoc networks.
-      Ad hoc networks are networks which have no pre-existing infrastructure and
-      so AODV is particularly suitable for peer-to-peer BLE networks. In AODV,
-      topology information is only transmitted on demand. Only a single route is
-      ever recorded between a source and destination, and is only maintained while
-      active. An example of this protocol can be seen in figure 1.
+      \subsection{Low Power Probing}
+    Low Power Probing (LPP) \cite{LPP} is a duty cycling technique in which the roles from LPL
+    are reversed. Instead of receivers scanning at wake-up intervals, they periodically
+    broadcast a probe package. an illustration of LPP is provided in figure \ref{fig:lpp}.
 
-      When a node wishes to send traffic to a host and no route is known, a route
-      request (RREQ) message is broadcast. At each node the RREQ arrives at, if
-      the node is not the destination and does not have a route recorded, it
-      rebroadcasts the RREQ. A route is considered found when the RREQ message
-      arrives at either the desired host, or to an intermediary node with a valid
-      route entry for the destination. In either case, a route reply message (RREP)
-      is sent back to the originator of the RREQ message. As the RREP message
-      propagates back to the originator, each intermediary node creates a route
-      to the destination.
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[width=\textwidth]{Images/chapter2/lpp.png}
+      \caption{Low Power Probing}
+      \label{fig:lpp}
+    \end{figure}
+    \FloatBarrier
 
-      Hello messages can be used to detect link breaks. Nodes periodically
-      broadcast these Hello messages to their neighbours and in the event that a
-      node fails to receive several Hello message from its neighbour, a break is
-      detected. In the event that a node detects an error in one of its known
-      routes, it sends a route error (RERR) message to each of its neighbours.
+    Transmitting nodes scan until a probe is detected, at
+    which point they immediately transmit a probe response. The receiver scans for a short
+    period after sending a probe, ensuring it will receive any probe responses
+    intended for it. Upon receiving data, the receiver will enter a high power mode,
+    keeping their radio on for a longer period.
 
-      The AODV protocol has built in sequencing numbers in each RREQ and RREP
-      packet which prevents routing loops being formed, a challenge faced by many
-      routing algorithms. In addition to this, each node maintains its own routing
-      table, keeping the routing process minimal if the host has the required
-      route information in its own routing table.
+      \subsection{X-MAC}
+    X-MAC \cite{XMAC} is an LPL based radio duty cycling protocol. X-MAC implements
+    a variation of LPL in which the transmitting node sends a series of short
+    preamble packets which include the address of the target destination. Periodic gaps
+    are used during the transmission of these shorter preambles. By including the
+    destination address, receiving nodes are able to turn their radios off immediately
+    if they are not the destination specified. The periodic gaps in the transmitting node's
+    preamble stream are used by receiving nodes to send acknowledgements. This
+    series of short preambles approximates the continuous preamble from standard
+    LPL. The X-MAC protocol is illustrated in figure \ref{fig:xmac}.
 
-      C. E. Perkins, E. M. Belding-Royer, and S. Das. "Ad hoc OnDemand Distance
-      Vector (AODV) Routing" RFC 3561, July 2003.
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[width=\textwidth]{Images/chapter2/xmac.png}
+      \caption{X-MAC}
+      \label{fig:xmac}
+    \end{figure}
+    \FloatBarrier
 
-      \subsubsection{Evaluation}
+    The inclusion of a destination address reduces the wake-up cost for nodes which
+    preambles are not intended for, making single-node wake-up feasible using
+    broadcasting.
 
-      \subsubsection{BLE Considerations}
-      \FloatBarrier
-      \begin{figure}[h]
-        \includegraphics[width=\textwidth]{Images/rreq_packet_format.png}
-      \end{figure}
-      \FloatBarrier
-      Total size: 24 Bytes
+      \subsection{BoX-MAC-2} \label{box_mac}
+    BoX-MAC-2 \cite{BOX_MAC} is an adaptation of X-MAC in which a transmitting node
+    includes the entire data packet within the preamble, instead of the destination
+    address. This eliminates the need for a transmitting node to send further
+    data after receiving an acknowledgement from a receiving node. The Box-MAC-2 protocol
+    is illustrated in figure \ref{fig:boxmac2}.
 
-      \subsection{LOADng}
-      T. Clausen et al. “The Lightweight On-demand Ad hoc Distance-vector Routing Protocol
-- Next Generation (LOADng)”. In: Internet Engineering Task Force (IETF) Draft
-(2016)
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[width=\textwidth]{Images/chapter2/boxmac2.png}
+      \caption{Box-MAC-2}
+      \label{fig:boxmac2}
+    \end{figure}
+    \FloatBarrier
 
-      \subsection{Trickle}
-      P. Levis, T. Clausen, J. Hui, O. Gnawali, J. Ko, The Trickle Algorithm, IETF
-      Internet Draft: draft-ietf-roll-trickle-08, 2011
+      \subsection{ContikiMAC}
+    ContikiMAC \cite{ContikiMAC} is a radio duty cycling protocol that uses LPL and is based on
+    X-MAC. It has two unique mechanisms to reduce energy consumption which can be
+    seen in figure \ref{fig:contikimac}.
 
-      \subsection{LOAD}
-      K. Kim, S. Daniel Park, G. Montenegro, S. Yoo, N. Kushalnagar,
-6LoWPAN Ad Hoc On-Demand Distance Vector Routing (LOAD), IETF
-Internet Draft: draft-daniel-6lowpan-load-adhoc-routing-03, 2007.
+    The first mechanism is \textit{Fastsleep}. With this, nodes turn off their radios if one
+    of three conditions are met:
+    \begin{itemize}
+      \item if a node detects radio activity longer than the largest packet length
+      in the protocol.
+      \item if detected radio activity is followed by a silence period which is
+      longer than two successive transmission intervals.
+      \item if valid radio activity is identified but no start of packet could be
+      detected.
+    \end{itemize}
 
-      \subsection{ZigBee Cluster Tree protocol}
-      S.C. Erge, ZigBee/IEEE 802.15.4 Summary, 2004. <http://
-staff.ustc.edu.cn/ustcsse/papers/SR10.ZigBee.pdf>.
+    The second mechanism is \textit{Transmission Phase Lock}. With this, each node maintains
+    the wake-up phases of their neighbours by noting the time at which it saw link
+    layer acknowledgements from them during its wake-up phase. With this information
+    a node can send information to its neighbour when it knows the neighbour will be awake.
 
-      \subsection{Hilow}
-      K. Kim, S. Yoo, J. Park, S.D. Park, J. Lee, Hierarchical Routing over
-6LoWPAN (HiLow), IETF: Internet Draft: draft-deniel-6lowpanhilow-hierarchical-routing-00.txt,
-vol. 38, December 2005.
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[width=\textwidth]{Images/chapter2/contikimac.png}
+      \caption{ContikMAC}
+      \label{fig:contikimac}
+    \end{figure}
+    \FloatBarrier
 
-      \subsection{Dymo-Low}
-      K. Kim, S. Park, I. Chakeres, C. Perkins, Dynamic MANET On-demand
-for 6LoWPAN (DYMO-low) Routing, Internet Draft: draftmontenegro-6lowpan-dymo-low-routing-03,
-June 2007
+    According to the ContikiMAC radio duty cycling protocol report \cite{ContikiMAC},
+    in which the protocol was evaluated in the Contiki simulation environment,
+    it was found that the Fastsleep and Phase Lock mechanisms reduce network power
+    consumption by between 10 and 80 percent, depending on the wakeup frequencies of
+    devices.
 
-      \subsection{RPL}
+    \section{Routing Protocols} \label{routing_protocols}
+      \subsection{Ad-hoc On Demand Distance Vector routing}
         \subsubsection{Overview}
-        RPL is based on the topological concept of Directed Acyclic
-        Graphs (DAGs). The DAG defines a tree-like structure
-        that specifies the default routes between nodes in the
-        LLN.
+    Ad-hoc On Demand Distance Vector routing (AODV) \cite{RFC3561} is a reactive routing protocol
+    designed for use in mobile ad-hoc networks. In AODV, topology information is only
+    transmitted on demand. Only a single route is ever recorded between a source
+    and destination, and is only maintained while active. An example of route discovery
+    in AODV can be seen in figure \ref{fig:adov}.
 
-        RPL organizes nodes as Destination-Oriented DAGs (DODAGs), where most
-        popular destination nodes (i.e. sinks) or those providing a
-        default route to the Internet (i.e. gateways) act as the roots
-        of the DAGs.
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[width=\textwidth]{Images/chapter2/aodv.png}
+      \caption{AODV route discovery}
+      \label{fig:adov}
+    \end{figure}
+    \FloatBarrier
 
-        A network may consist of one or several DODAGs, which form together an
-        RPL instance identified by a unique ID, called RPLInstanceID.
+    The AODV protocol has built in sequencing numbers in each of its control
+    packets which prevents routing loops being formed, a challenge faced by many
+    routing algorithms. In addition to this, each node maintains its own routing
+    table, keeping the routing process minimal if the host has the required
+    route information in its own routing table. Entries in the routing table
+    have a time to live and if not used will expire, limiting the memory overhead
+    to routes that are being used, as opposed to all possible routes.
 
-        Olfa Gaddour, Anis Koubâa, "RPL in a nutshell: A survey", Computer Networks
-Volume 56, Issue 14, 28 September 2012, Pages 3163–3178
+    When a node wishes to send traffic to a host and no route is known, a \textit{route
+    request} (RREQ) message is broadcast. At each node the RREQ arrives at, the
+    following processing takes place:
+    \begin{itemize}
+      \item The node creates or updates a route to the previous hop from which
+      the RREQ was received.
+      \item If a RREQ with the same source address and RREQ ID has been previously
+      received within a certain time period, the RREQ is discarded.
+      \item The node increments the Hop Count within the RREQ by one.
+      \item The node creates or updates a reverse route to the source address of
+      the RREQ. This is required in the event a RREP is received with the source
+      of the RREQ as the destination.
+      \item If the node is the destination of the RREQ, it discards the RREQ,
+      generates a RREP, and sends the RREP to the next hop of the reverse route.
+      \item If the node is not the destination but has a routing table entry
+      for the destination, it can generate a  route reply (RREP) which it sends to the RREQ source.
+      \item If the node is not the destination and does not have any routing information
+      regarding the destination, it re-broadcasts the RREQ message.
+    \end{itemize}
 
-        \FloatBarrier
-        \begin{figure}[h]
-          \includegraphics[width=\textwidth]{Images/rpl_control_packet_format.png}
-        \end{figure}
-        \FloatBarrier
+    At each node a RREP arrives at, the following processing takes place:
+    \begin{itemize}
+      \item The node creates or updates a route to the previous hop from which
+      the RREP was received.
+      \item The node increments the Hop Count within the RREP by one.
+      \item The node creates or updates a route to the source of the RREP.
+      \item The node sends the RREP to the next hop indicated in the routing
+      table entry for the RREP's destination address.
+    \end{itemize}
 
-        \subsubsection{Evaluation}
-        Aishwarya Parasuram, "An Analysis of the RPL Routing Standard for Low Power
-        and Lossy Networks", May 14, 2016
+    In summary, a route is considered found when the RREQ message arrives at either the desired host,
+    or to an intermediary node with a valid route entry for the destination.
+    In either case, a RREP is sent back to the originator of
+    the RREQ message. As the RREP message propagates back to the originator,
+    each intermediary node creates a route to the destination (the source of the
+    RREP).
 
-        \begin{itemize}
-        \item
-        RPL does not support applications which require a fixed MTU (Maximum Transmission
-  Unit). The control message size can vary greatly and RPL does not give any
-  guarantees on the size.
+    Route maintenance is performed using Hello messages which detect link breaks. Nodes periodically
+    broadcast these Hello messages to their neighbours and in the event that a
+    node fails to receive a Hello message within a certain period from its neighbour,
+    a break is detected. In the event that a node detects an error in one of its known
+    routes, it sends a route error (RERR) message to each of its neighbours.
 
-        \item
-        RPL does not cater well to a request-response traffic pattern such as utility metering[24]
+        \subsubsection{Control Packets}
+    Figures \ref{fig:adov_rreq} and \ref{fig:adov_rrep} show the format
+    of AODV's two primary control packets, RREQs and RREPs.
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[scale=0.75]{Images/chapter2/aodv_rreq.png}
+      \caption{AODV RREQ packet format}
+      \label{fig:adov_rreq}
+    \end{figure}
+    \FloatBarrier
 
-        Ulrich Herberg and Thomas Clausen. “A Comparative Performance Study of the Routing
-        Protocols LOAD and RPL with Bi-Directional Trac
-        in Low-power and Lossy Networks
-        (LLN)”
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[scale=0.75]{Images/chapter2/aodv_rrep.png}
+      \caption{AODV RREP packet format}
+      \label{fig:adov_rrep}
+    \end{figure}
+    \FloatBarrier
 
-        \item
-        RPL does not cater to emergency scenarios where there is a high data trac in the
-  network. In case of an emergency, a number of messages might be sent out causing
-  congestion at the DODAG root. It also causes delay and possible packet loss [68].
-  RPL doesn’t specify any mechanism of dealing with data packet loss.
+    These are static sized packets with the RREQ packet having a total size of
+    twenty-four bytes and the RREP packet having a total size of twenty bytes.
 
-      Weisheng Tang et al. “Toward Improved RPL: A Congestion Avoidance Multipath
-  Routing Protocol with Time Factor for Wireless Sensor Networks”. In: Journal of
-  Sensors 2016 (2015).
+      \subsection{Dynamic Source Routing}
+    Dynamic Source Routing (DSR) \cite{RFC4728} is a routing protocol designed
+    for multi-hop wireless ad-hoc networks of mobile devices. DSR is based on a type
+    of routing called \textit{source routing}. In source routing, the sender of a packet
+    determines the complete route in which a packet is to be forwarded through.
 
-        \item
-        RPL cannot be used for topologies with a long chain-like structure that contains paths
-  length greater than eight (if raw IPv6 is used) or 64 (while using IPv6 address
-  compression [31]), while being used in non-storing mode. The source routing header
-  can be a maximum of 136 octets which includes an eight octet long header. An IPv6
-  address is 16 octets long. Hence no more than eight can be accommodated unless
-  address compression is used. If the addresses are compressed, then the path length
-  may not exceed 64.
+    Each node in the network maintains a route cache in which it caches source routes
+    which it has learned of. When sending a packet, the node first checks for a valid
+    route to the destination in its route cache. If a route is found, it is used
+    to transmit the packet. If no route is found, the node can discover the route
+    using DSRs route discovery protocol.
 
-        Ed. J. Hui and P. Thubert. “Compression Format for IPv6 Datagrams over IEEE
-  802.15.4-Based Networks”. In: Internet Engineering Task Force (IETF) 4944 (2011).
+    Nodes initiating route discovery broadcast a route request (RREQ) packet identifying
+    both the source of the RREQ and the target node. Each RREQ message contains
+    a \textit{route record}, which is the accumulated sequence of hops taken by
+    the RREQ packet as it propagates through the network. Upon reaching the target
+    destination, a \textit{route response} (RREP) packet is generated containing the
+    route by which the RREQ arrived through. This RREP is then returned via a route
+    specified in the nodes route cache if one exists, or by reversing the route
+    contained in the RREQ.
 
-        \item
-        In the current specification there is no support provided for broadcast. RPL only
-  supports unicast to and from the DODAG root. In case broadcast is required, the root
-  has to deliver the data to all nodes, which is very inecient.
+    Route maintenance is performed by every node in a route. If a node exceeds
+    it's maximum number of retransmissions for a packet it is forwarding without
+    receiving a response, it must send a \textit{route error} message to the original
+    sender of the packet.
 
-        \item
-        RPL is not suitable for WSNs that contain sensor nodes that can harvest ambient
-  energy from the environment. Such networks are a possible solution for sustaining
-  sensor networks for decades without maintenance, since they can recharge on their
-  own using ambient energy. However in [47], it was found that energy-harvesting sensor
-  networks running RPL produce 40-45\% lower goodput than battery-operated sensor
-  networks as the harvesters drop
+      \subsubsection{Control Packets}
+    Figure \ref{fig:dsr_rreq} and figure \ref{fig:dsr_rreq} show the format
+    of DSR's two primary control packets, RREQs and RREPs.
 
-        Wilbert Nestor Michael C. Tiglao, China Kimberly Paige S. Yu, and Carl C. Dizon.
-  “Performance Analysis of RPL in an Ambient Energy Harvesting Wireless Sensor Network”.
-  In: The 4th International Conference on Internet Applications, Protocols and
-  Services (NETAPPS) (2015).
-  \end{itemize}
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[scale=0.75]{Images/chapter2/dsr_rreq.png}
+      \caption{DSR RREQ packet format}
+      \label{fig:dsr_rreq}
+    \end{figure}
+    \FloatBarrier
+
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[scale=0.75]{Images/chapter2/dsr_rrep.png}
+      \caption{DSR RREP packet format}
+      \label{fig:dsr_rreq}
+    \end{figure}
+    \FloatBarrier
+
+    These are dynamic sized packets, with the RREQ having an eight byte header
+    with n possible addresses each of which are four bytes. This list grows as the
+    RREQ propagates through the network. The RREP packet has a four byte header
+    with n possible addresses, again, each of which are four bytes each. This list
+    identifies the route the packet should take.
+
+      \subsection{Optimised Link State Routing}
+    Optimised Link State Routing (OLSR) \cite{RFC3626} is proactive IP routing protocol
+    optimized for mobile ad hoc networks. Proactive protocols are those in which
+    routing information for all nodes in the network is discovered and maintained
+    before the transmission of packets. It is an optimisation of a pure link state
+    protocol for mobile ad-hoc networks. In pure link state protocols, all adjacent
+    network links are flooded through the entire network. In
+    DSDV, only a subset of these links are declared. This subset is known as the
+    \textit{multipoint relay selectors}. In addition to this, flooding of control
+    traffic is minimised as nodes only use the selected nodes, called \textit{multipoint
+    relays} (MPR) to transmit traffic to the rest of the network.
+
+    HELLO messages are used for neighbour sensing. They are broadcast to all
+    nodes within one-hop but are not relayed to further nodes. They contain
+    information relating to neighbours and their link status. This allows
+    a node to learn about nodes up to two hops away.
+
+    Topology Control (TC) messages are periodically sent throughout the network
+    using MPRs. These messages contain a list of neighbours who have selected
+    the transmitting node as an MPR. The information in these nodes are used by
+    receiving nodes to build topology tables, which identify the MPRs used by
+    each node in the network, and are used to calculate routing tables.
+
+        \subsubsection{Control Packets}
+    Figure \ref{fig:olsr_hello} and figure \ref{fig:olsr_tc} show the format
+    for OSLR's two primary control packets, HELLO and TC.
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[scale=0.75]{Images/chapter2/olsr_hello.png}
+      \caption{OLSR HELLO packet format}
+      \label{fig:olsr_hello}
+    \end{figure}
+    \FloatBarrier
+
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[scale=0.75]{Images/chapter2/olsr_tc.png}
+      \caption{OLSR TC packet format}
+      \label{fig:olsr_tc}
+    \end{figure}
+    \FloatBarrier
+
+    The HELLO packet contains eight bytes of header information and a list of n neighbour
+    addresses which are four bytes each. The TC packet contains a four byte header and
+    a list of n node addresses which are again four bytes each.
+
+      \subsection{Destination Sequenced Distance Vector Routing}
+    Destination Sequenced Distance Vector Routing (DSDV) \cite{DSDV} is a table driven
+    routing protocol designed for ad hoc mobile networks. DSDV uses the Bellman-Ford algorithm with a hop count
+    metric to calculate paths. The Bellman-Ford algorithm \cite{bellman} computes the shortest
+    path from a source vertex to all other vertices in a weighted graph.
+    DSDV is a proactive protocol, meaning the routing information for all nodes
+    in the network is maintained in the routing table and routes are added
+    and updated by nodes exchanging table information at regular intervals and
+    through triggers mechanisms employed by the protocol.
+
+    Each node in the network maintains its own sequence number which is independently
+    chosen. Each time a periodic update is made, a node increments its sequence
+    number by two. Every update sent by a node includes their sequence number
+    to eliminate routing loops.
+
+      \subsubsection{Control Packets}
+    There are two defined packets in DSDV for advertising routing table information.
+
+    The first type of packet is the \textit{full dump}. Full dumps carry all
+    available routing information from a node and are intended for infrequent
+    use. Full dump messages will most likely require multiple network protocol data
+    units (NPDU).
+
+    The second type of packet is the \textit{incremental}. Incremental packets
+    contain routing information which has changed since the last full dump.
+    Incremental messages are intended to fit within a single NPDU.
+
+      \subsection{IPv6 Routing Protocol for Low-Power and Lossy Networks}
+        \subsubsection{Overview}
+    The Routing Protocol for Low-Power and Lossy Networks (RPL) \cite{RFC6550} is
+    a distance vector IPv6 routing protocol designed for wireless ad-hoc
+    sensor networks. The protocol specifies how to build
+    a \textit{Destination Oriented Directed Acyclic Graph} (DODAG) using an objective
+    function and a set of metrics and constraints. The objective function operates
+    on this set of metrics and constraints. An example of an DODAG objective is
+    to "Find the path with the lowest hop count(metric) while avoiding non-encrypted
+    links (constraint)". An \textit{RPLInstance} is comprised of one or more DODAGs
+    and multiple RPLInstances can be active in the network at a time, with nodes
+    having multiple objective functions active at once.
+
+    The graph building process begins at a root node. The root broadcasts information
+    about the DODAG formation using DODAG Information Objects (DIO) packets. These
+    packets carry relevant network information that allows nodes to discover the
+    new RPLInstance, learn its configuration parameters, and to select a set of
+    parent nodes. Nodes receiving DIOs decide whether to join the DODAG according
+    to their objective function. Nodes joining the DODAG compute their rank within
+    the DODAG, which is an indication of their co-ordinates within the graph hierarchy,
+    and re-broadcasts the DIO message to their neighbours. The transmission of DIO packets
+    build routes in the downwards direction from the root to leaf nodes. Nodes in
+    the network can broadcast DODAG Information Solicitation (DIS) messages
+    to solicit a DIO from surrounding RPL nodes.
+
+    Point-to-point communications is achieved by sending packets 'up' the graph
+    to a common ancestor, at which point the packet is forwarded 'down' to the
+    desired destination.
+
+        \subsubsection{Control Packets}
+    Figure \ref{fig:rpl_pkt} illustrates the general format of RPL control packets.
+    These packets have a four byte header and a base which contains DIS and DIO
+    packets.
+
+    \FloatBarrier
+    \begin{figure}[ht]
+      \includegraphics[scale=0.75]{Images/chapter2/rpl_pkt.png}
+      \caption{RPL control packet format}
+      \label{fig:rpl_pkt}
+    \end{figure}
+    \FloatBarrier
+
+    DIS packets have a length of four bytes and can carry up to three
+    IPV6 packet options which make up one byte.
+
+    DIO packets are seven bytes long, including a 128 bit DODAGID, which is the
+    IPv6 address belonging to the DODAG root.
+
+    \section{Protocol Performance} \label{performance}
+    This section provides an overview of some of the research conducted comparing
+    the protocols found in section \ref{routing_protocols}.
+
+    A performance comparison was performed between AODV and DSR in \cite{AODV_vs_DSR}.
+    The comparison was performed using a simulation based on the NS-2 network simulator
+    and focuses on low mobility networks. The performance metrics measured include:
+    Packet Delivery Ratio (PDR) and End to end delay. The authors observed that
+    AODV and DSR have very similar PDRs in static networks, but AODV has improved
+    PDR with increased node movement. With respect to end to end delay, they observed
+    that DSR marginally outperformed AODV in their simulations. Overall, they concluded
+    that AODV is preferred to DSR due to its more efficient use of bandwidth.
+
+    A performance comparison was performed between AODV and DSDV in \cite{AODV_vs_DSDV}.
+    The comparison was performed using a simulator called MobiREAL which is also based
+    on the NS2 network simulator. The performance metrics measured include:
+    Network throughput and End to end delay. The authors observed that
+    AODV had a PDR of seventy to ninety percent, while DSDV had a PDR of fifty to seventy-five percent. They observed
+    high end to end delay initially in AODV that reduces with time, and the inverse in
+    DSDV, with a low end to end delay in the beginning that gradually increases. They
+    concluded that the performance of AODV was better than DSDV for real time applications.
+
+    A performance comparison was performed between RPL and a lightweight version of
+    AODV called LOADng in \cite{RPL_vs_AODV}. The simulated network is a static
+    network which reflects the Home Automation \cite{roll_home} scenario. The comparison was performed using
+    the Cooja simulator on the Contiki OS and uses the ContikiRPL implementation
+    and a basic implementation of LOADng. The performance metrics measured include:
+    End to end delay, Average hop distance, and Routing overhead. The authors
+    observed that RPL provides shorter routes and a smaller spanning tree depth
+    compared to LOADng in dense network topologies. They observed that the routing
+    overhead of RPL largely depends on the choice of network parameters chosen but
+    has less memory requirements than LOADng. They concluded that RPL performed
+    better than LOADng but has a much higher implementation complexity. It is also
+    worth noting that the LOADng implementation was unoptimised. If it was optimised
+    it may have had better performance.
+
+    A performance comparison was performed between DSDV, AODV, and DSR in
+    \cite{DSDV_vs_AODV_vs_DSR}. The comparison was performed using the NS-2.34
+    simulation tool. The performance metrics measured include: PDR, Network throughput,
+    End to end delay, and Routing overhead. The authors observed that DSDV has a
+    higher routing load and lower throughput compared to both AODV and DSR. AODV
+    and DSR have extremely similar PDRs, end to end delays, and throughput in scenarios
+    of low and high mobility, but AODV has a lower routing load in all tested scenarios.
+
+    A performance comparison was performed between OLSR, AODV, and DSDV in
+    \cite{OLSR_vs_AODV_vs_DSDV}. The comparison was performed with an NS-2 simulation
+    with the simulated topologies being based on tactical networks for ships and
+    sensor-based network nodes. The performance metrics used include: PDR, End to
+    end delay, Routing overhead, and Normalised routing load. The authors observed
+    that in scenarios of mobility, AODV outperforms both of the other protocols,
+    with OLSR being a vast improvement over DSDV. In the scenario of a static
+    sensor network OLSR outperformed AODV in all cases, with AODV performing
+    poorly with high node density but still outperforming DSDV.
+
+    From the above papers, AODV either outperforms or performs similarly to DSR
+    regardless of network density or node mobility. AODV is superior to DSDV
+    with respect to PDR, Routing Load, and Network throughput. It has worse
+    end to end delay initially, but its end to end delay gradually improves, surpassing
+    DSDV. AODV outperforms OLSR in all metrics in networks with node mobility, but
+    the reverse is true in static networks. An unoptimised implementation of AODV is
+    outperformed by RPL in all metrics within the Home Automation environment,
+    a fully static sensor network. Although the above research does not focus on
+    route discovery, it shows AODV as the most suitable protocol for networks with
+    mobility and that it still performs well in static networks.
+
     \section{Summary}
+    There are two primary methods of radio duty cycling, Low Power Listening and
+    Low Power Probing. In LPL, duty cycling nodes scan for preamble streams at
+    wake-up intervals. In LPP, duty cycling nodes advertise strobe
+    packets at wake-up intervals followed by a short period of scanning. The X-MAC
+    and Box-MAC-2 protocols have improved preamble usage, and ContikiMAC implements
+    Fast Sleep and Transmission Phase Lock techniques to further improve the
+    effectiveness of LPL radio duty cycling.
+
+    There are many suitable routing protocols for low power ad-hoc networks.
+    AODV is a reactive routing protocol that establishes routes on demand, uses the
+    routing table at each intermediate device to establish routes, and has static
+    sized packets. DSR is another reactive routing protocol but uses source
+    routing in which the route is known before transmitting and so has dynamic
+    sized packets. OLSR is a proactive protocol, meaning every node maintains
+    a routing table representing the entire topology of the network. It is an
+    optimisation of a pure link state protocol which uses Multipoint Relays to
+    reduce the flooding of table information throughout the network. DSDV is another
+    proactive protocol in which routing table information is periodically shared
+    between neighbouring nodes and a Bellman-Ford algorithm is used to calculate
+    paths. Finally, RPL is a protocol which specifies how to build a Destination
+    Oriented Directed Acyclic Graph for sensor networks. Nodes in the network represent vertices
+    and maintain information about their parents so that a path exists between
+    any node and the root node.
+
+    There have been some performance comparisons made between some of the
+    protocols investigated in this chapter, all of which have been made using
+    NS-2 or Cooja simulations. The main metrics measured are the Packet Delivery
+    Ratio, End to end delay, and Routing overhead. AODV and DSR appear to have
+    similar performance in static and mobile networks with DSR having a worse
+    routing overhead. In the one experiment featuring RPL, it appears to outperform
+    a light weight, unoptimised version of AODV, but has a much higher implementation
+    complexity. In the one experiment featuring OLSR, it appears to have
+    better overall performance than AODV in static topologies. DSDV appears to have
+    the poorest performance out of all the routing protocols.

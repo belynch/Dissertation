@@ -1,11 +1,100 @@
 \chapter{Introduction}
 
 	\section{Introduction}
-		Internet of things/WSNs; Emedded systems with limited power - low energy protocols
-		- BLE \cite{greenwade93}
+	Attendance tracking is commonly used in places such as universities, to determine
+	student attendance in lectures, and in organisations, for taking employee attendance
+	and for assembly scenarios such as in fire evacuation procedures.
+
+	Attendance tracking has mainly been achieved by performing manual roll calls using
+	pen and paper, but has had implementations using technologies such as barcodes,
+	Radio-frequency identification (RFID), and Near field communication (NFC).
+	In the case of barcodes and NFC, these technologies require users to manually
+	scan themselves for their attendance to be taken. In the case of RFID, tag collision
+	can occur when numerous tags in the same area respond at the same time. Although
+	implementations exist using these technologies, they have limitations and are
+	not always effortless for the user.
+
+	Bluetooth Low Energy (BLE) is a version of Bluetooth which was designed specifically
+	with the Internet of Things (IoT) in mind. It has ultra-low peak, average, and idle
+	power consumption and operates in the industrial, scientific, and medical (ISM)
+	radio band (2.400 - 2.4835 GHz). BLE has two modes of communication, broadcasting
+	and connections, with broadcasting most commonly being used to discover devices in order
+	to establish connections.
+
+	Microcontrollers with BLE radios, such as Nordic Semiconductor's nRF51 series
+	devices, are extremely small (6mm x 6mm x 1mm) and relatively cheap (from 2 euro).
+	It is feasible to incorporate these microcontrollers into student or organisation
+	ID cards. With the addition of energy efficient applications with a focus on radio
+	duty cycling, a microcontroller should be able to run on a coin cell battery
+	for the lifecycle of the ID card.
+
+	High crowd density is one of the main characteristics of scenarios where
+	attendance tracking is commonly used. With the use of multi-hop routing,
+	this high crowd density can be exploited to reduce the required transmission
+	range of devices, which in turn reduces the transmission power required.
+
+	The combination of a low power routing protocol, such as the Ad-hoc On Demand
+	Distance Vector routing protocol, with the exclusive use of BLE broadcasting results
+	in an implementation with small packet sizes, low packet processing times, and
+	removes the overhead of connection establishment, creating an ideal framework
+	for efficient and long lasting attendance tracking applications.
+
 	\section{Problem Area}
-		Member discovery/member consensus in semi static Ad-hoc netoworks - role call
+	As mentioned, the attendance tracking is focused in areas of high crowd densities.
+	Devices in the location where attendance tracking is taking place will form wireless,
+	mobile ad-hoc networks (MANET).
+
+	Attendance tracking in MANETs is a form of network member discovery and so one of
+	the most important requirements in the selection of an appropriate routing protocol
+	is its performance in the discovery of new routes. Once a route is established,
+	member presence knowledge will have been acquired and the route will only be used
+	in the establishment of other routes.
+
+	Energy efficiency will be one of the main requirements for an attendance tracking
+	application, as it will have to last for the lifetime of the user's ID card. For
+	the purpose of this research we consider that lifetime to be a year. The main
+	mechanism to achieve this energy efficiency is radio duty cycling. That is, the
+	radio of the device will remain in a low power mode for the majority of its life,
+	only entering a higher power mode when attendance is being taken.
+
 	\section{Motivation for this research}
-		The rise of the Internet of things and Bluetooth Low Energy playing a large
-		part in it.
-	\section{Dissertation Structure}
+	The Internet of Things (IoT) has recently been in the spotlight as one of the fastest
+	growing information technology sectors. According to a report \cite{IHS_IOT} from
+	the financial services company IHS Markit, the number of IoT devices is expected
+	to rise by fifteen percent year-over-year to reach twenty billion in 2017.
+
+	According to the IoT Developer Survey 2017 \cite{SURVEY_IOT}, Bluetooth Low Energy
+	has seen a growth of twelve percent in its use as a connectivity protocol for IoT solutions
+	since 2015. In addition to this, the majority of major android branded
+	smartphones (Android OS 4.3 and above), iOS devices (model 4S and onwards),
+	and Windows based smart phones are BLE enabled. The early adoption of BLE in Apple's
+	iBeacon has also aided in the wider adoption of BLE technology.
+
+	The explosion of the IoT and the growing adoption rate of BLE make it an exciting
+	technology to work with. It is still a relatively new technology and further
+	research into its capabilities and possible applications is still required.
+
+	\section{Objectives}
+	The goals of this dissertation are as follows:
+	\begin{itemize}
+		\item The design of an attendance tracking protocol based on an existing routing
+		protocol suitable for member identification in an ad-hoc network.
+		\item The implementation of a module encapsulating the functionality of the
+		chosen routing protocol.
+		\item The implementation of an application which makes use of the above module
+		to track attendance.
+		\item An analysis of the performance of the protocol in BLE.
+	\end{itemize}
+
+	\section{Dissertation Outline}
+	This dissertation begins with a literature review in Chapter 2 which provides
+	an understanding of radio duty cycling, an overview of appropriate routing
+	protocols, and a review of their performance. Chapter 3 provides a description of the key aspects of BLE for the
+	development of applications, a discussion of design decisions related to the implementation
+	of a routing protocol for BLE, as well as a description of two protocols
+	for attendance tracking. Chapter 4 discusses the implementation of these protocols
+	and provides some security considerations with regards to the implementation.
+	Chapter 5 provides an overview of the evaluation methodology, results from medium
+	scale testing, and an analysis of these results. Finally, Chapter 6 summarises the
+	contributions made by this dissertation, a general discussion on the outcome of this thesis, and areas
+	for future work.

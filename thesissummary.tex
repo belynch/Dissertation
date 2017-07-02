@@ -1,0 +1,38 @@
+\begin{center}
+  \textbf{\LARGE{Summary}}
+\end{center}
+
+This thesis aimed to design and implement an attendance tracking protocol
+using Bluetooth Low Energy (BLE). The attendance tracking protocol would be implemented
+in a BLE capable microcontroller which would be incorporated in an ID card along with
+a coin cell battery.
+
+Attendance tracking is performed in areas of high population densities such as
+lecture theatres and evacuation assembly points. These are ideal network topologies for multi-hop
+routing protocols, which can take advantage of the high density, reducing the required transmission
+power, and consequently, power consumption of devices in the network.
+
+The Ad-hoc on Demand Distance Vector (AODV) routing protocol is
+chosen as a suitable protocol for attendance tracking after some analysis of existing
+routing protocols and research investigating their performance. Two attendance tracking
+protocols are designed, \textit{Roll Call} and \textit{Route-toZero}, that are based on AODV's route discovery mechanism.
+This mechanism is implemented on Nordic Semiconductor's nRF5 series devices
+using their nRF SDK. These two attendance tracking protocol designs are then implemented
+on top of the AODV implementation.
+
+The attendance tracking applications are evaluated in a physical network of ten nodes
+comprised of nRF51 devices. Metrics including the node discovery rate, number of
+packets sent and processed per node, and number of packets sent and processed per hop
+are measured. The viability of the attendance tracking protocol
+and AODV implementation are shown, with a best recorded node discovery rate of 1.34
+nodes discovered per second.
+
+Based on these results, a number of areas for further work are outlined. One of
+these is the improvement of the AODV implementation to include route maintenance
+to handle route errors. This would be required in larger networks and would
+allow for mobility in nodes while tracking attendance. Another area for further work
+is the implementation of these designs in a simulator in order to measure performance in larger
+and denser networks. The final area is the implementation of other protocols which might
+be suitable for attendance tracking.
+
+\newpage

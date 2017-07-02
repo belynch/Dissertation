@@ -29,6 +29,16 @@
 \usepackage {tcdthesis}              %% Preamble.
 \usepackage {graphicx}
 \usepackage {placeins}
+\usepackage {url}
+%\usepackage {parskip}
+\usepackage {color}   %May be necessary if you want to color links
+\usepackage {hyperref}
+
+\hypersetup{
+    colorlinks=true, %set true if you want colored links
+    linktoc=all,     %set to all if you want both sections and subsections linked
+    linkcolor=black,  %choose some color if you want links to stand out
+}
 
 \mastersthesis                       %% Uncomment one of these; if you don't
 
@@ -51,10 +61,14 @@
                                      %% minimum spacing accepted by the
                                      %% Graduate School.
 
+ \makeatletter
+ \g@addto@macro\@floatboxreset\centering
+ \makeatother
+
 \renewcommand{\thesisauthor}{Ben Lynch}                     %% Your official UT name.
 \renewcommand{\thesismonth}{September}                      %% Your month of graduation.
 \renewcommand{\thesisyear}{2017}                            %% Your year of graduation.
-\renewcommand{\thesistitle}{Investigating the Energy Consumption of Member Discovery in Bluetooth Low Energy}
+\renewcommand{\thesistitle}{Collaborative Attendance Tracking using Bluetooth Low Energy}
 \renewcommand{\thesisauthorpreviousdegrees}{B.A.(Mod.)}     %% Your previous degrees, abbreviated; separate multiple degrees by commas.
 \renewcommand{\thesissupervisor}{Jonathan Dukes}            %% Your thesis supervisor; use mixed-case and don't use any titles or degrees.
 
@@ -71,7 +85,6 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 \begin{document}                                  %% BEGIN THE DOCUMENT
 
 \thesistitlepage                                  %% Generate the title page.
@@ -80,12 +93,13 @@
 
 \thesispermissionpage				                      %% Generate the copyright permission page
 
-\include{thesisacknowledgements}
+\include{thesissummary}
 
 \include{thesisabstract}
 
+\include{thesisacknowledgements}
+
 \tableofcontents                                  %% Generate table of contents.
-\listoftables                                     %% Uncomment this to generate list of tables.
 \listoffigures                                    %% Uncomment this to generate list of figures.
 
 %%
@@ -97,12 +111,6 @@
   \include{chapter4}
   \include{chapter5}
   \include{chapter6}
-
-
-\addcontentsline {toc}{chapter}{Appendices}       %% Force Appendices to appear in contents
-\begin{appendix}
- \include{appendix1}
-\end{appendix}
 
 
 %\addcontentsline {toc}{chapter}{Bibliography}     %% Force Bibliography to appear in contents
